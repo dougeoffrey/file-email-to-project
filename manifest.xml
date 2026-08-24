@@ -4,13 +4,13 @@
   xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
   xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0" xsi:type="MailApp">
   <Id>05c2e1c9-3e1d-406e-9a91-e9ac64854143</Id>
-  <Version>1.0.0.2</Version>
+  <Version>1.0.0.3</Version>
   <ProviderName>File Email to Project</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="File Email to Project"/>
   <Description DefaultValue="Save an email's attachments to the selected SharePoint project."/>
-  <IconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-128.png"/>
+  <IconUrl DefaultValue="https://localhost:3000/assets/folder-paperclip-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/folder-paperclip-128.png"/>
   <SupportUrl DefaultValue="https://github.com/dougeoffrey/file-email-to-project"/>
   <AppDomains>
     <AppDomain>https://dougeoffrey.github.io</AppDomain>
@@ -73,9 +73,9 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/folder-paperclip-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/folder-paperclip-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/folder-paperclip-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html" />

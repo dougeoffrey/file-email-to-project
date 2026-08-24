@@ -1,4 +1,4 @@
-/* global document, Office */
+/* global document, Office, window */
 
 import {
   createNestablePublicClientApplication,
@@ -54,11 +54,12 @@ let documentsDriveId = "";
 let selectedEmailAttachmentCount = 0;
 
 async function getAuthClient(): Promise<IPublicClientApplication> {
+  const brokerHost = window.location.hostname === "localhost" ? "localhost:3000" : window.location.hostname;
   authClient ??= await createNestablePublicClientApplication({
     auth: {
       clientId,
       authority: `https://login.microsoftonline.com/${tenantId}`,
-      redirectUri: "brk-multihub://localhost:3000",
+      redirectUri: `brk-multihub://${brokerHost}`,
     },
     cache: { cacheLocation: "localStorage" },
   });

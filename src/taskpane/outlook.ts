@@ -144,14 +144,16 @@ async function loadActiveProjects(accessToken: string): Promise<void> {
     accessToken
   );
   const columnName = (displayName: string) => {
-    const column = columns.value.find((candidate) => candidate.displayName === displayName);
+    const column = columns.value.find(
+      (candidate) => candidate.displayName.toLowerCase() === displayName.toLowerCase()
+    );
     if (!column) throw new Error(`The SharePoint column '${displayName}' was not found.`);
     return column.name;
   };
 
   const projectNoField = columnName("Project No");
   const titleField = columnName("Title");
-  const statusField = columnName("Status");
+  const activeField = columnName("Active");
   let itemsUrl = `https://graph.microsoft.com/v1.0/sites/${encodeURIComponent(site.id)}/lists/${projectList.id}/items?$expand=fields`;
   const items: ListItemResult[] = [];
 
@@ -162,7 +164,10 @@ async function loadActiveProjects(accessToken: string): Promise<void> {
   }
 
   const projects = items
-    .filter((item) => String(item.fields[statusField] ?? "").toLowerCase() !== "completed")
+    .filter((item) => {
+      const active = item.fields[activeField];
+      return active === true || ["true", "yes", "1", "active"].includes(String(active).toLowerCase());
+    })
     .map((item) => ({
       id: item.id,
       projectNo: String(item.fields[projectNoField] ?? "").trim(),

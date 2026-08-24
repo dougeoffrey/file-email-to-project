@@ -1,0 +1,24 @@
+:root { color: #242424; font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #fff; }
+.panel { padding: 28px 22px; }
+.eyebrow { color: #0f6cbd; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; }
+h1 { margin: 7px 0 8px; font-size: 25px; line-height: 1.2; }
+.intro { margin: 0 0 24px; color: #616161; font-size: 14px; line-height: 1.45; }
+.email-card { display: flex; gap: 12px; margin-bottom: 24px; padding: 14px; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa; }
+.email-icon { color: #0f6cbd; font-size: 22px; }
+.label, label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 600; }
+.secondary + label { margin-top: 20px; }
+.field { margin-top: 18px; }
+.email-card .label { margin-bottom: 3px; }
+.subject { overflow-wrap: anywhere; font-size: 14px; line-height: 1.35; }
+.metadata, .status { color: #707070; font-size: 12px; }
+.metadata { margin-top: 5px; }
+select, input, button { width: 100%; min-height: 40px; border-radius: 4px; font: inherit; }
+select, input { padding: 0 10px; border: 1px solid #8a8886; background: #fff; }
+.preview-label { margin-top: 9px; color: #707070; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.folder-preview { margin-top: 3px; overflow-wrap: anywhere; color: #424242; font-size: 13px; }
+button { margin-top: 14px; border: 0; background: #0f6cbd; color: #fff; font-weight: 600; }
+button.secondary { margin: 0; border: 1px solid #0f6cbd; background: #fff; color: #0f6cbd; }
+button:disabled, select:disabled { cursor: not-allowed; opacity: .55; }
+.status { margin: 10px 0 0; line-height: 1.4; }

@@ -3,8 +3,8 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
   xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0" xsi:type="MailApp">
-  <Id>6ab2de49-62c3-436b-b6bc-c22564397788</Id>
-  <Version>1.0.0.1</Version>
+  <Id>49e32e46-56f9-4b8b-bed1-f721211ef57c</Id>
+  <Version>1.0.0.0</Version>
   <ProviderName>File Email to Project</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="File Email to Project"/>

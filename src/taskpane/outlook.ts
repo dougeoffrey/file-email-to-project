@@ -9,7 +9,7 @@ import {
 
 const clientId = "5765f492-946f-4ef2-a8d6-416514b589a6";
 const tenantId = "c67c1288-4131-4879-8c88-ae0bc631308c";
-const scopes = ["User.Read", "Sites.ReadWrite.All"];
+const scopes = ["User.Read", "Sites.ReadWrite.All", "Mail.ReadBasic"];
 
 let authClient: IPublicClientApplication;
 
@@ -54,7 +54,7 @@ let documentsDriveId = "";
 let selectedEmailAttachmentCount = 0;
 let selectedEmailDatePrefix = "";
 let selectedEmailDateItemId = "";
-let selectedEmailDateMessage = "Loading email sent date…";
+let selectedEmailDateMessage = "Connect Microsoft 365 to read the email’s sent date.";
 
 async function getAuthClient(): Promise<IPublicClientApplication> {
   const brokerHost = window.location.hostname === "localhost" ? "localhost:3000" : window.location.hostname;
@@ -257,20 +257,16 @@ async function loadSelectedEmailSentDate(): Promise<void> {
   updateSaveButton();
 
   try {
-    if (typeof item.getAllInternetHeadersAsync !== "function") {
-      throw new Error("This Outlook version cannot read the email's sent date.");
-    }
-    const headers = await new Promise<string>((resolve, reject) => {
-      item.getAllInternetHeadersAsync((result) => {
-        if (result.status === Office.AsyncResultStatus.Succeeded) resolve(result.value);
-        else reject(new Error(result.error.message));
-      });
-    });
-    // Unfold MIME headers; Date is the sent timestamp, not creation or receipt time.
-    const dateHeader = /^Date:[ \t]*(.+)$/im.exec(headers.replace(/\r?\n[ \t]+/g, " "))?.[1].trim();
-    const sentDate = new Date(dateHeader || "");
-    if (!dateHeader || !Number.isFinite(sentDate.getTime())) {
-      throw new Error("The email has no valid sent date.");
+    // Read Exchange's stored sent timestamp. Internet Date headers can be absent
+    // even when Outlook displays a valid sent date (for example, sent/internal mail).
+    const messageId = Office.context.mailbox.convertToRestId(item.itemId, Office.MailboxEnums.RestVersion.v2_0);
+    const message = await graphGet<{ sentDateTime?: string }>(
+      `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}?$select=sentDateTime`,
+      currentAccessToken
+    );
+    const sentDate = new Date(message.sentDateTime || "");
+    if (!message.sentDateTime || !Number.isFinite(sentDate.getTime())) {
+      throw new Error("Outlook did not return a readable sent date. Reopen the add-in and try again.");
     }
     // Use Outlook's display timezone, which can differ from the browser's timezone.
     const local = Office.context.mailbox.convertToLocalClientTime(sentDate);
@@ -282,7 +278,13 @@ async function loadSelectedEmailSentDate(): Promise<void> {
     ].join("");
     selectedEmailDateItemId = item.itemId;
   } catch (error) {
-    selectedEmailDateMessage = error instanceof Error ? error.message : "The email's sent date could not be read.";
+    if (Office.context.mailbox.item.itemId !== item.itemId) return;
+    selectedEmailDateMessage = "Could not read the email’s sent date. Select Connect Microsoft 365 to retry.";
+    const status = document.getElementById("status")!;
+    status.textContent = error instanceof Error ? error.message : selectedEmailDateMessage;
+    const button = document.getElementById("connect-button") as HTMLButtonElement;
+    button.hidden = false;
+    button.disabled = false;
   }
   updateSaveButton();
 }
@@ -433,6 +435,7 @@ async function connectMicrosoft365(): Promise<void> {
     button.hidden = true;
     currentAccessToken = accessToken;
     await loadActiveProjects(accessToken);
+    await loadSelectedEmailSentDate();
   } catch (error) {
     button.disabled = false;
     status.textContent = error instanceof Error ? error.message : "Microsoft 365 connection failed.";
@@ -453,6 +456,7 @@ async function connectSilently(): Promise<void> {
     currentAccessToken = token.accessToken;
     button.hidden = true;
     await loadActiveProjects(token.accessToken);
+    await loadSelectedEmailSentDate();
   } catch {
     button.hidden = false;
     status.textContent = "Select Connect Microsoft 365 to continue.";
@@ -483,6 +487,6 @@ Office.onReady((info) => {
   descriptionInput.addEventListener("input", updateSaveButton);
   saveButton.addEventListener("click", saveAttachments);
   appBody.style.display = "block";
-  void loadSelectedEmailSentDate();
+  updateSaveButton();
   void connectSilently();
 });

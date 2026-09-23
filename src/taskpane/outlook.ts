@@ -52,6 +52,9 @@ interface DriveItemResult {
 let currentAccessToken = "";
 let documentsDriveId = "";
 let selectedEmailAttachmentCount = 0;
+let selectedEmailDatePrefix = "";
+let selectedEmailDateItemId = "";
+let selectedEmailDateMessage = "Loading email sent date…";
 
 async function getAuthClient(): Promise<IPublicClientApplication> {
   const brokerHost = window.location.hostname === "localhost" ? "localhost:3000" : window.location.hostname;
@@ -246,34 +249,65 @@ async function loadDestinationFolders(): Promise<void> {
   }
 }
 
+async function loadSelectedEmailSentDate(): Promise<void> {
+  const item = Office.context.mailbox.item;
+  selectedEmailDatePrefix = "";
+  selectedEmailDateItemId = "";
+  selectedEmailDateMessage = "Loading email sent date…";
+  updateSaveButton();
+
+  try {
+    if (typeof item.getAllInternetHeadersAsync !== "function") {
+      throw new Error("This Outlook version cannot read the email's sent date.");
+    }
+    const headers = await new Promise<string>((resolve, reject) => {
+      item.getAllInternetHeadersAsync((result) => {
+        if (result.status === Office.AsyncResultStatus.Succeeded) resolve(result.value);
+        else reject(new Error(result.error.message));
+      });
+    });
+    // Unfold MIME headers; Date is the sent timestamp, not creation or receipt time.
+    const dateHeader = /^Date:[ \t]*(.+)$/im.exec(headers.replace(/\r?\n[ \t]+/g, " "))?.[1].trim();
+    const sentDate = new Date(dateHeader || "");
+    if (!dateHeader || !Number.isFinite(sentDate.getTime())) {
+      throw new Error("The email has no valid sent date.");
+    }
+    // Use Outlook's display timezone, which can differ from the browser's timezone.
+    const local = Office.context.mailbox.convertToLocalClientTime(sentDate);
+    if (Office.context.mailbox.item.itemId !== item.itemId) return;
+    selectedEmailDatePrefix = [
+      String(local.year).slice(-2),
+      String(local.month + 1).padStart(2, "0"),
+      String(local.date).padStart(2, "0"),
+    ].join("");
+    selectedEmailDateItemId = item.itemId;
+  } catch (error) {
+    selectedEmailDateMessage = error instanceof Error ? error.message : "The email's sent date could not be read.";
+  }
+  updateSaveButton();
+}
+
 function buildFolderName(): string {
   const descriptionInput = document.getElementById("folder-description") as HTMLInputElement;
-  const now = new Date();
-  const datePrefix = [
-    String(now.getFullYear()).slice(-2),
-    String(now.getMonth() + 1).padStart(2, "0"),
-    String(now.getDate()).padStart(2, "0"),
-  ].join("");
+  const datePrefix = selectedEmailDateItemId === Office.context.mailbox.item.itemId ? selectedEmailDatePrefix : "";
   const safeDescription = descriptionInput.value
     .trim()
     .replace(/["*:<>?/\\|#%]/g, "-")
     .replace(/\s+/g, " ")
     .replace(/[. ]+$/g, "");
 
-  return safeDescription ? `${datePrefix}_${safeDescription}` : "";
+  return datePrefix && safeDescription ? `${datePrefix}_${safeDescription}` : "";
 }
 
 function updateSaveButton(): void {
   const folderSelect = document.getElementById("folder-select") as HTMLSelectElement;
   const descriptionField = document.getElementById("description-field")!;
-  const descriptionInput = document.getElementById("folder-description") as HTMLInputElement;
   const preview = document.getElementById("folder-name-preview")!;
   const saveButton = document.getElementById("save-button") as HTMLButtonElement;
   descriptionField.hidden = !folderSelect.value;
 
   const folderName = buildFolderName();
-  const datePrefix = [String(new Date().getFullYear()).slice(-2), String(new Date().getMonth() + 1).padStart(2, "0"), String(new Date().getDate()).padStart(2, "0")].join("");
-  preview.textContent = folderName || `${datePrefix}_…`;
+  preview.textContent = folderName || (selectedEmailDatePrefix ? `${selectedEmailDatePrefix}_…` : selectedEmailDateMessage);
   saveButton.disabled = !folderSelect.value || !folderName || selectedEmailAttachmentCount === 0;
 }
 
@@ -449,5 +483,6 @@ Office.onReady((info) => {
   descriptionInput.addEventListener("input", updateSaveButton);
   saveButton.addEventListener("click", saveAttachments);
   appBody.style.display = "block";
+  void loadSelectedEmailSentDate();
   void connectSilently();
 });
